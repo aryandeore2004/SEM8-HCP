@@ -1,0 +1,137 @@
+// =======================================================
+// HPC: Parallel Merge Sort using OpenMP
+// Serial vs Parallel with Time Calculation
+// Using Arrays (Manual Input)
+// =======================================================
+
+#include <iostream>
+#include <omp.h>
+
+using namespace std;
+
+// ==============================
+// MERGE FUNCTION (COMMON)
+// ==============================
+void merge(int arr[], int left, int mid, int right) {
+    int n1 = mid - left + 1;
+    int n2 = right - mid;
+
+    int L[n1], R[n2];
+
+    for (int i = 0; i < n1; i++)
+        L[i] = arr[left + i];
+    for (int j = 0; j < n2; j++)
+        R[j] = arr[mid + 1 + j];
+
+    int i = 0, j = 0, k = left;
+
+    while (i < n1 && j < n2) {
+        if (L[i] <= R[j])
+            arr[k++] = L[i++];
+        else
+            arr[k++] = R[j++];
+    }
+
+    while (i < n1)
+        arr[k++] = L[i++];
+
+    while (j < n2)
+        arr[k++] = R[j++];
+}
+
+// ==============================
+// SERIAL MERGE SORT
+// ==============================
+void serialMergeSort(int arr[], int left, int right) {
+    if (left < right) {
+        int mid = (left + right) / 2;
+
+        serialMergeSort(arr, left, mid);
+        serialMergeSort(arr, mid + 1, right);
+
+        merge(arr, left, mid, right);
+    }
+}
+
+// ==============================
+// PARALLEL MERGE SORT
+// ==============================
+void parallelMergeSort(int arr[], int left, int right) {
+    if (left < right) {
+        int mid = (left + right) / 2;
+
+        #pragma omp parallel sections
+        {
+            #pragma omp section
+            parallelMergeSort(arr, left, mid);
+
+            #pragma omp section
+            parallelMergeSort(arr, mid + 1, right);
+        }
+
+        merge(arr, left, mid, right);
+    }
+}
+
+// ==============================
+// PRINT FUNCTION
+// ==============================
+void printArray(int arr[], int n) {
+    for (int i = 0; i < n; i++)
+        cout << arr[i] << " ";
+    cout << endl;
+}
+
+// ==============================
+// MAIN FUNCTION
+// ==============================
+int main() {
+    int n;
+
+    cout << "Enter number of elements: ";
+    cin >> n;
+
+    int arr[n], arr_serial[n], arr_parallel[n];
+
+    cout << "Enter " << n << " numbers:\n";
+    for (int i = 0; i < n; i++) {
+        cin >> arr[i];
+        arr_serial[i] = arr[i];
+        arr_parallel[i] = arr[i];
+    }
+
+    // ==============================
+    // SERIAL
+    // ==============================
+    double start_serial = omp_get_wtime();
+
+    serialMergeSort(arr_serial, 0, n - 1);
+
+    double end_serial = omp_get_wtime();
+
+    // ==============================
+    // PARALLEL
+    // ==============================
+    double start_parallel = omp_get_wtime();
+
+    parallelMergeSort(arr_parallel, 0, n - 1);
+
+    double end_parallel = omp_get_wtime();
+
+    // ==============================
+    // OUTPUT
+    // ==============================
+    cout << "\n===== SERIAL MERGE SORT =====\n";
+    printArray(arr_serial, n);
+    cout << "Time: " << (end_serial - start_serial) << " sec\n";
+
+    cout << "\n===== PARALLEL MERGE SORT =====\n";
+    printArray(arr_parallel, n);
+    cout << "Time: " << (end_parallel - start_parallel) << " sec\n";
+
+    cout << "\nSpeedup: "
+         << (end_serial - start_serial) / (end_parallel - start_parallel)
+         << endl;
+
+    return 0;
+}

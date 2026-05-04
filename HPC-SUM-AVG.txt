@@ -1,0 +1,144 @@
+// =======================================================
+// HPC5: Parallel Reduction using Arrays
+// Min, Max, Sum, Average (Serial vs Parallel)
+// =======================================================
+
+#include <iostream>
+#include <omp.h>
+
+using namespace std;
+
+// ==============================
+// SERIAL FUNCTIONS
+// ==============================
+
+int serialMin(int arr[], int n) {
+    int min_val = arr[0];
+    for (int i = 0; i < n; i++) {
+        if (arr[i] < min_val)
+            min_val = arr[i];
+    }
+    return min_val;
+}
+
+int serialMax(int arr[], int n) {
+    int max_val = arr[0];
+    for (int i = 0; i < n; i++) {
+        if (arr[i] > max_val)
+            max_val = arr[i];
+    }
+    return max_val;
+}
+
+long long serialSum(int arr[], int n) {
+    long long sum = 0;
+    for (int i = 0; i < n; i++) {
+        sum += arr[i];
+    }
+    return sum;
+}
+
+double serialAvg(int arr[], int n) {
+    return (double)serialSum(arr, n) / n;
+}
+
+
+// ==============================
+// PARALLEL FUNCTIONS
+// ==============================
+
+int parallelMin(int arr[], int n) {
+    int min_val = arr[0];
+
+    #pragma omp parallel for reduction(min:min_val)
+    for (int i = 0; i < n; i++) {
+        if (arr[i] < min_val)
+            min_val = arr[i];
+    }
+    return min_val;
+}
+
+int parallelMax(int arr[], int n) {
+    int max_val = arr[0];
+
+    #pragma omp parallel for reduction(max:max_val)
+    for (int i = 0; i < n; i++) {
+        if (arr[i] > max_val)
+            max_val = arr[i];
+    }
+    return max_val;
+}
+
+long long parallelSum(int arr[], int n) {
+    long long sum = 0;
+
+    #pragma omp parallel for reduction(+:sum)
+    for (int i = 0; i < n; i++) {
+        sum += arr[i];
+    }
+    return sum;
+}
+
+double parallelAvg(int arr[], int n) {
+    return (double)parallelSum(arr, n) / n;
+}
+
+
+// ==============================
+// MAIN FUNCTION
+// ==============================
+
+int main() {
+    int n;
+
+    cout << "Enter number of elements: ";
+    cin >> n;
+
+    int arr[n];   // Array declaration (VLA - works in GCC)
+
+    cout << "Enter " << n << " numbers:\n";
+    for (int i = 0; i < n; i++) {
+        cin >> arr[i];
+    }
+
+    // SERIAL
+    double start_serial = omp_get_wtime();
+
+    int s_min = serialMin(arr, n);
+    int s_max = serialMax(arr, n);
+    long long s_sum = serialSum(arr, n);
+    double s_avg = serialAvg(arr, n);
+
+    double end_serial = omp_get_wtime();
+
+    // PARALLEL
+    double start_parallel = omp_get_wtime();
+
+    int p_min = parallelMin(arr, n);
+    int p_max = parallelMax(arr, n);
+    long long p_sum = parallelSum(arr, n);
+    double p_avg = parallelAvg(arr, n);
+
+    double end_parallel = omp_get_wtime();
+
+    // OUTPUT
+    cout << "\n===== SERIAL =====\n";
+    cout << "Min: " << s_min << endl;
+    cout << "Max: " << s_max << endl;
+    cout << "Sum: " << s_sum << endl;
+    cout << "Avg: " << s_avg << endl;
+    cout << "Time: " << (end_serial - start_serial) << " sec\n";
+
+    cout << "\n===== PARALLEL =====\n";
+    cout << "Min: " << p_min << endl;
+    cout << "Max: " << p_max << endl;
+    cout << "Sum: " << p_sum << endl;
+    cout << "Avg: " << p_avg << endl;
+    cout << "Time: " << (end_parallel - start_parallel) << " sec\n";
+
+    cout << "\nSpeedup: "
+         << (end_serial - start_serial) / (end_parallel - start_parallel)
+         << endl;
+
+    return 0;
+}

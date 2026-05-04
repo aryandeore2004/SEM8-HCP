@@ -1,0 +1,118 @@
+// =======================================================
+// HPC: Parallel Bubble Sort using OpenMP
+// Serial vs Parallel with Time Calculation
+// Using Arrays (Manual Input)
+// =======================================================
+
+#include <iostream>
+#include <omp.h>
+
+using namespace std;
+
+// ==============================
+// SERIAL BUBBLE SORT
+// ==============================
+void serialBubbleSort(int arr[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+                // swap
+                int temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+        }
+    }
+}
+
+// ==============================
+// PARALLEL BUBBLE SORT (ODD-EVEN)
+// ==============================
+void parallelBubbleSort(int arr[], int n) {
+    for (int i = 0; i < n; i++) {
+
+        // Even phase
+        #pragma omp parallel for
+        for (int j = 0; j < n - 1; j += 2) {
+            if (arr[j] > arr[j + 1]) {
+                int temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+        }
+
+        // Odd phase
+        #pragma omp parallel for
+        for (int j = 1; j < n - 1; j += 2) {
+            if (arr[j] > arr[j + 1]) {
+                int temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+        }
+    }
+}
+
+// ==============================
+// PRINT FUNCTION
+// ==============================
+void printArray(int arr[], int n) {
+    for (int i = 0; i < n; i++) {
+        cout << arr[i] << " ";
+    }
+    cout << endl;
+}
+
+// ==============================
+// MAIN FUNCTION
+// ==============================
+int main() {
+    int n;
+
+    cout << "Enter number of elements: ";
+    cin >> n;
+
+    int arr[n], arr_serial[n], arr_parallel[n];
+
+    cout << "Enter " << n << " numbers:\n";
+    for (int i = 0; i < n; i++) {
+        cin >> arr[i];
+        arr_serial[i] = arr[i];     // copy for serial
+        arr_parallel[i] = arr[i];   // copy for parallel
+    }
+
+    // ==============================
+    // SERIAL SORT
+    // ==============================
+    double start_serial = omp_get_wtime();
+
+    serialBubbleSort(arr_serial, n);
+
+    double end_serial = omp_get_wtime();
+
+    // ==============================
+    // PARALLEL SORT
+    // ==============================
+    double start_parallel = omp_get_wtime();
+
+    parallelBubbleSort(arr_parallel, n);
+
+    double end_parallel = omp_get_wtime();
+
+    // ==============================
+    // OUTPUT
+    // ==============================
+    cout << "\n===== SERIAL SORT =====\n";
+    printArray(arr_serial, n);
+    cout << "Time: " << (end_serial - start_serial) << " sec\n";
+
+    cout << "\n===== PARALLEL SORT =====\n";
+    printArray(arr_parallel, n);
+    cout << "Time: " << (end_parallel - start_parallel) << " sec\n";
+
+    cout << "\nSpeedup: "
+         << (end_serial - start_serial) / (end_parallel - start_parallel)
+         << endl;
+
+    return 0;
+}
