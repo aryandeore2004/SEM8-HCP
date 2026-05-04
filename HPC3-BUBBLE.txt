@@ -1,17 +1,16 @@
-// =======================================================
-// HPC: Parallel Bubble Sort using OpenMP
-// Serial vs Parallel with Time Calculation
-// Using Arrays (Manual Input)
-// =======================================================
-
 #include <iostream>
 #include <omp.h>
+#include <cstdlib>
+#include <ctime>
 
 using namespace std;
 
-// ==============================
-// SERIAL BUBBLE SORT
-// ==============================
+void autoInputArray(int arr[], int n) {
+    for (int i = 0; i < n; i++) {
+        arr[i] = rand() % 100;
+    }
+}
+
 void serialBubbleSort(int arr[], int n) {
     for (int i = 0; i < n - 1; i++) {
         for (int j = 0; j < n - i - 1; j++) {
@@ -25,9 +24,6 @@ void serialBubbleSort(int arr[], int n) {
     }
 }
 
-// ==============================
-// PARALLEL BUBBLE SORT (ODD-EVEN)
-// ==============================
 void parallelBubbleSort(int arr[], int n) {
     for (int i = 0; i < n; i++) {
 
@@ -53,9 +49,6 @@ void parallelBubbleSort(int arr[], int n) {
     }
 }
 
-// ==============================
-// PRINT FUNCTION
-// ==============================
 void printArray(int arr[], int n) {
     for (int i = 0; i < n; i++) {
         cout << arr[i] << " ";
@@ -63,9 +56,6 @@ void printArray(int arr[], int n) {
     cout << endl;
 }
 
-// ==============================
-// MAIN FUNCTION
-// ==============================
 int main() {
     int n;
 
@@ -74,45 +64,37 @@ int main() {
 
     int arr[n], arr_serial[n], arr_parallel[n];
 
-    cout << "Enter " << n << " numbers:\n";
+    // srand(static_cast<unsigned>(time(nullptr)));
+
+    autoInputArray(arr, n);
+
+    // cout << "Generated " << n << " random numbers:\n";
+    // printArray(arr, n);
+
     for (int i = 0; i < n; i++) {
-        cin >> arr[i];
         arr_serial[i] = arr[i];     // copy for serial
         arr_parallel[i] = arr[i];   // copy for parallel
     }
 
-    // ==============================
-    // SERIAL SORT
-    // ==============================
     double start_serial = omp_get_wtime();
 
     serialBubbleSort(arr_serial, n);
 
     double end_serial = omp_get_wtime();
 
-    // ==============================
-    // PARALLEL SORT
-    // ==============================
     double start_parallel = omp_get_wtime();
 
     parallelBubbleSort(arr_parallel, n);
 
     double end_parallel = omp_get_wtime();
-
-    // ==============================
-    // OUTPUT
-    // ==============================
+    
     cout << "\n===== SERIAL SORT =====\n";
-    printArray(arr_serial, n);
+    // printArray(arr_serial, n);
     cout << "Time: " << (end_serial - start_serial) << " sec\n";
 
     cout << "\n===== PARALLEL SORT =====\n";
-    printArray(arr_parallel, n);
+    // printArray(arr_parallel, n);
     cout << "Time: " << (end_parallel - start_parallel) << " sec\n";
-
-    cout << "\nSpeedup: "
-         << (end_serial - start_serial) / (end_parallel - start_parallel)
-         << endl;
-
+    
     return 0;
 }
